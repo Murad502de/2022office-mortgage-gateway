@@ -21,6 +21,6 @@ $router->get('/changestage', [
     'uses'        =>  'LeadController@cronChangeStage',
 ]);
 
-$router->post('/test', function() {
+$router->get('/test', function() {
     return 'test string 2022';
 });
