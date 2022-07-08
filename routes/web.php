@@ -20,7 +20,3 @@ $router->get('/changestage', [
     'middleware'  =>  'amoAuth',
     'uses'        =>  'LeadController@cronChangeStage',
 ]);
-
-$router->get('/test', function() {
-    return 'test string 2022';
-});

@@ -220,19 +220,19 @@ class LeadController extends Controller
 
     public function cronChangeStage()
     {
+        return 200;
+
         $account  = new Account();
         $authData = $account->getAuthData();
         $amo      = new amoCRM($authData);
 
         $objLead = new Lead();
 
-        $isDev                      = false;
         $leadsCount                 = 10;
-        $MORTGAGE_PIPELINE_ID       = $isDev ? 4799893 : 4691106;
-        $loss_reason_id             = $isDev ? 1038771 : 755698;
-        $loss_reason_close_by_man   = $isDev ? 618727 : 1311718;
-        $loss_reason_comment_id     = $isDev ? 1038773 : 755700;
-        $resp_user                  = $isDev ? 7001125 : 7507200;
+        $MORTGAGE_PIPELINE_ID       = 4691106;
+        $loss_reason_id             = 755698;
+        $loss_reason_close_by_man   = 1311718;
+        $loss_reason_comment_id     = 755700;
         $mortgageApproved_status_id = 43332213;
         $paymentForm_field_id       = 589157;
         $paymentForm_field_mortgage = 1262797;
