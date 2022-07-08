@@ -48,13 +48,10 @@ class LeadController extends Controller
 
         $hauptLead = $amo->findLeadById($hauptLeadId);
 
-        Log::info(__METHOD__, ['hauptLead']);
-        Log::info(__METHOD__, [$hauptLead]);
-
         if ($hauptLead['code'] === 404 || $hauptLead['code'] === 400) {
-            return response(['Bei der Suche nach einem hauptLead ist ein Fehler in der Serveranfrage aufgetreten'], $hauptLead['code']);
+            return response(['An error occurred in the server request while searching for a main lead'], $hauptLead['code']);
         } else if ($hauptLead['code'] === 204) {
-            return response(['hauptLead ist nicht gefunden'], 404);
+            return response(['Lead not found'], 404);
         }
 
         $mainContactId = null;
@@ -70,9 +67,9 @@ class LeadController extends Controller
         $contact = $amo->findContactById($mainContactId);
 
         if ($contact['code'] === 404 || $contact['code'] === 400) {
-            return response(['Bei der Suche nach einem Kontakt ist ein Fehler in der Serveranfrage aufgetreten '], $contact['code']);
+            return response(['An error occurred in the server request while looking for a contact'], $contact['code']);
         } else if ($contact['code'] === 204) {
-            return response(['Contact ist nicht gefunden'], 404);
+            return response(['Contact not found'], 404);
         }
 
         $leads                = $contact['body']['_embedded']['leads'];
@@ -82,14 +79,11 @@ class LeadController extends Controller
 
         for ($leadIndex = 0; $leadIndex < count($leads); $leadIndex++) {
             $lead = $amo->findLeadById($leads[$leadIndex]['id']);
-
             $currentPipelineid = $lead['body']['pipeline_id'];
 
             if (
-                (int) $mortgage_pipeline_id === (int) $currentPipelineid
-                &&
-                (int) $lead['body']['status_id'] !== 142
-                &&
+                (int) $mortgage_pipeline_id === (int) $currentPipelineid &&
+                (int) $lead['body']['status_id'] !== 142 &&
                 (int) $lead['body']['status_id'] !== 143
             ) {
                 $haveMortgage   = true;
@@ -112,9 +106,7 @@ class LeadController extends Controller
                 (int) config('app.amoCRM.mortgage_responsible_user_id'),
                 $mortgageLeadId,
                 time() + 10800,
-                '
-          Менеджер повторно отправил запрос на ипотеку.
-        '
+                'Менеджер повторно отправил запрос на ипотеку.'
             );
 
             // Datenbankeintrag fürs Hauptlead
@@ -133,15 +125,10 @@ class LeadController extends Controller
                 ]
             );
 
-            return response(['OK. Active Hypothek ist gefunden. Eine Aufgabe muss gestellt werden'], 200);
+            return response(['OK. Active mortgage is found. A task must be set'], 200);
         } else {
             // TODO Lead erstellen und zwar das Hauptlead kopieren
-
-            Log::info(
-                __METHOD__,
-
-                ['Active Hypothek ist nicht gefunden. Ein neues Lead muss erstellt werden']
-            );
+            Log::info(__METHOD__, ['OK. Active mortgage is not found. A new lead must be created']);
 
             $newLead = $amo->copyLead($hauptLeadId);
 
@@ -193,7 +180,7 @@ class LeadController extends Controller
                 );
             }
 
-            return response(['OK. Active Hypothek ist nicht gefunden. Ein neues Lead muss erstellt werden'], 200);
+            return response(['OK. Active mortgage is not found. A new lead must be created'], 200);
         }
     }
 
