@@ -271,32 +271,32 @@ class amoCRM
             ]
         );
 
-        $pipelineGub        = 1393867;
-        $pipelineGubPark    = 4551384;
-        $pipelineDost       = 3302563;
-        $pipelineDostPark   = 4703964;
+        // $pipelineGub        = 1393867;
+        // $pipelineGubPark    = 4551384;
+        // $pipelineDost       = 3302563;
+        // $pipelineDostPark   = 4703964;
 
         $responsible_user_id = (int) config('app.amoCRM.mortgage_responsible_user_id');
 
-        switch ($pipeline_id) {
-            case $pipelineGub:
-            case $pipelineGubPark:
-                $responsible_user_id = 7507200;
-                break;
+        // switch ($pipeline_id) {
+        //     case $pipelineGub:
+        //     case $pipelineGubPark:
+        //         $responsible_user_id = 7507200;
+        //         break;
 
-            case $pipelineDost:
-            case $pipelineDostPark:
-                $responsible_user_id = 7896546;
-                break;
+        //     case $pipelineDost:
+        //     case $pipelineDostPark:
+        //         $responsible_user_id = 7896546;
+        //         break;
 
-            default:
-                $responsible_user_id = (int) config('app.amoCRM.mortgage_responsible_user_id');
-                break;
-        }
+        //     default:
+        //         $responsible_user_id = (int) config('app.amoCRM.mortgage_responsible_user_id');
+        //         break;
+        // }
 
         //FIXME /////////////////////////////////////////////////////////
-        $contacts = $lead['body']['_embedded']['contacts'];
 
+        $contacts = $lead['body']['_embedded']['contacts'];
         $newLeadContacts = [];
 
         for ($i = 0; $i < count($contacts); $i++) {
