@@ -48,12 +48,12 @@ class LeadController extends Controller
 
         $hauptLead = $amo->findLeadById($hauptLeadId);
 
+        Log::info(__METHOD__, ['hauptLead']);
+        Log::info(__METHOD__, [$hauptLead]);
+
         if ($hauptLead['code'] === 404 || $hauptLead['code'] === 400) {
             return response(['Bei der Suche nach einem hauptLead ist ein Fehler in der Serveranfrage aufgetreten'], $hauptLead['code']);
         } else if ($hauptLead['code'] === 204) {
-            Log::info(__METHOD__, ['hauptLead ist nicht gefunden']);
-            Log::info(__METHOD__, [$hauptLead]);
-
             return response(['hauptLead ist nicht gefunden'], 404);
         }
 
