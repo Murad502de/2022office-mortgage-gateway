@@ -208,11 +208,16 @@ class LeadController extends Controller
 
         $dataLead = $inputData['leads']['status'][0];
 
-        changeStage::create(
-            [
-                'lead_id' => (int) $dataLead['id'],
-                'lead'    => json_encode($dataLead)
-            ]
+        // changeStage::create(
+        //     [
+        //         'lead_id' => (int) $dataLead['id'],
+        //         'lead'    => json_encode($dataLead)
+        //     ]
+        // );
+
+        changeStage::updateOrCreate(
+            ['lead_id' => (int) $dataLead['id'],],
+            ['lead'    => json_encode($dataLead)]
         );
 
         return response(['OK'], 200);
@@ -220,7 +225,7 @@ class LeadController extends Controller
 
     public function cronChangeStage()
     {
-        return 200;
+        return 200; // DELETE
 
         $account  = new Account();
         $authData = $account->getAuthData();
@@ -230,13 +235,16 @@ class LeadController extends Controller
 
         $leadsCount                 = 10;
         $MORTGAGE_PIPELINE_ID       = 4691106;
-        $loss_reason_id             = 755698;
+        $loss_reason_id             = 982017;
+
         $loss_reason_close_by_man   = 1311718;
         $loss_reason_comment_id     = 755700;
         $mortgageApproved_status_id = 43332213;
+
         $paymentForm_field_id       = 589157;
         $paymentForm_field_mortgage = 1262797;
-        $haupt_loss_reason_id       = 588811;
+
+        $haupt_loss_reason_id       = 981809;
 
         $leads          = changeStage::take($leadsCount)->get();
         $objChangeStage = new changeStage();
@@ -423,36 +431,23 @@ class LeadController extends Controller
                             $hypothekLead_responsible_user_id  = (int) $hypothekLead['responsible_user_id'];
 
                             if (
-                                (int) $hypothekLead['status_id'] !== $stage_success
-                                &&
-                                (int) $hypothekLead['status_id'] !== $FILING_AN_APPLICATION
-                                &&
-                                (int) $hypothekLead['status_id'] !== $WAITING_FOR_BANK_RESPONSE
-                                &&
-                                (int) $hypothekLead['status_id'] !== $MORTGAGE_APPROVED
-                                &&
-                                (int) $hypothekLead['status_id'] !== $SENDING_DATA_PREPARING_DDU
-                                &&
-                                (int) $hypothekLead['status_id'] !== $DDU_TRANSFERRED_TO_BANK
-                                &&
-                                (int) $hypothekLead['status_id'] !== $WAITING_FOR_ESCROW_OPENING
-                                &&
-                                (int) $hypothekLead['status_id'] !== $SIGNING_DEAL
-                                &&
-                                (int) $hypothekLead['status_id'] !== $SUBMITTED_FOR_REGISTRATION
-                                &&
+                                (int) $hypothekLead['status_id'] !== $stage_success &&
+                                (int) $hypothekLead['status_id'] !== $FILING_AN_APPLICATION &&
+                                (int) $hypothekLead['status_id'] !== $WAITING_FOR_BANK_RESPONSE &&
+                                (int) $hypothekLead['status_id'] !== $MORTGAGE_APPROVED &&
+                                (int) $hypothekLead['status_id'] !== $SENDING_DATA_PREPARING_DDU &&
+                                (int) $hypothekLead['status_id'] !== $DDU_TRANSFERRED_TO_BANK &&
+                                (int) $hypothekLead['status_id'] !== $WAITING_FOR_ESCROW_OPENING &&
+                                (int) $hypothekLead['status_id'] !== $SIGNING_DEAL &&
+                                (int) $hypothekLead['status_id'] !== $SUBMITTED_FOR_REGISTRATION &&
                                 (int) $hypothekLead['status_id'] !== $CONTROL_RECEIPT_FUNDS
                             ) {
-                                echo $hypothekLeadId . ' Hypotheklead befindet sich vor der Stufe der Antragstellung<br>';
+                                echo $hypothekLeadId . 'Hypotheklead befindet sich vor der Stufe der Antragstellung<br>';
 
-                                $amo->updateLead(
-                                    [
-                                        [
-                                            "id"        => (int) $hypothekLeadId,
-                                            "status_id" => $FILING_AN_APPLICATION,
-                                        ]
-                                    ]
-                                );
+                                $amo->updateLead([[
+                                    "id"        => (int) $hypothekLeadId,
+                                    "status_id" => $FILING_AN_APPLICATION,
+                                ]]);
 
                                 // Aufgabe in der Hypothek-Lead stellen
                                 $amo->createTask(
@@ -535,9 +530,7 @@ class LeadController extends Controller
                             $responsible_user_id,
                             (int) $crtLead->related_lead,
                             time() + 10800,
-                            '
-                Сделка менеджера с клиентом в основной воронке перешла в "Закрыто не реализовано". Созвонись с клиентом. Если покупка не актуальна, то закрой все активные задачи. Если покупка актуальна, то свяжись с менеджером и выясни детали, а затем восстанови сделку.
-              '
+                            'Сделка менеджера с клиентом в основной воронке перешла в "Закрыто не реализовано". Созвонись с клиентом. Если покупка не актуальна, то закрой все активные задачи. Если покупка актуальна, то свяжись с менеджером и выясни детали, а затем восстанови сделку.'
                         );
 
                         // Leadsdaten aus der Datenbank entfernen (leads)
