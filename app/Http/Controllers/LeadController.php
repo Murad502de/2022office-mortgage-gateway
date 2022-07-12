@@ -38,18 +38,23 @@ class LeadController extends Controller
 
     public function createMortgage(Request $request)
     {
-        $account  = new Account();
-        $authData = $account->getAuthData();
-        $amo      = new amoCRM($authData);
-
-        $inputData    = $request->all();
-        $hauptLeadId  = $inputData['hauptLeadId'] ?? false;
-        $from  = $inputData['from'] ?? false;
+        $account     = new Account();
+        $authData    = $account->getAuthData();
+        $amo         = new amoCRM($authData);
+        $inputData   = $request->all();
+        $hauptLeadId = $inputData['hauptLeadId'] ?? false;
+        $from        = $inputData['from'] ?? false;
 
         $hauptLead = $amo->findLeadById($hauptLeadId);
 
-        if ($hauptLead['code'] === 404 || $hauptLead['code'] === 400) {
-            return response(['An error occurred in the server request while searching for a main lead'], $hauptLead['code']);
+        if (
+            $hauptLead['code'] === 404 ||
+            $hauptLead['code'] === 400
+        ) {
+            return response(
+                ['An error occurred in the server request while searching for a main lead'],
+                $hauptLead['code']
+            );
         } else if ($hauptLead['code'] === 204) {
             return response(['Lead not found'], 404);
         }
@@ -67,7 +72,10 @@ class LeadController extends Controller
         $contact = $amo->findContactById($mainContactId);
 
         if ($contact['code'] === 404 || $contact['code'] === 400) {
-            return response(['An error occurred in the server request while looking for a contact'], $contact['code']);
+            return response(
+                ['An error occurred in the server request while looking for a contact'],
+                $contact['code']
+            );
         } else if ($contact['code'] === 204) {
             return response(['Contact not found'], 404);
         }
@@ -110,32 +118,28 @@ class LeadController extends Controller
             );
 
             // Datenbankeintrag fürs Hauptlead
-            Lead::create(
-                [
-                    'id_target_lead'  => $hauptLeadId,
-                    'related_lead'    => $mortgageLeadId
-                ]
-            );
+            Lead::create([
+                'id_target_lead'  => $hauptLeadId,
+                'related_lead'    => $mortgageLeadId,
+            ]);
 
             // Datenbankeintrag für die Hypothek
-            Lead::create(
-                [
-                    'id_target_lead'  => $mortgageLeadId,
-                    'related_lead'    => $hauptLeadId
-                ]
+            Lead::create([
+                'id_target_lead'  => $mortgageLeadId,
+                'related_lead'    => $hauptLeadId,
+            ]);
+
+            return response(
+                ['OK. Active mortgage is found. A task must be set'],
+                200
+            );
+        } else { /* Lead erstellen und zwar das Hauptlead kopieren */
+            Log::info(
+                __METHOD__,
+                ['OK. Active mortgage is not found. A new lead must be created']
             );
 
-            return response(['OK. Active mortgage is found. A task must be set'], 200);
-        } else {
-            // TODO Lead erstellen und zwar das Hauptlead kopieren
-            Log::info(__METHOD__, ['OK. Active mortgage is not found. A new lead must be created']);
-
             $newLead = $amo->copyLead($hauptLeadId);
-
-            // echo 'newLead<br>';
-            // echo '<pre>';
-            // print_r( $newLead );
-            // echo '</pre>';
 
             if ($newLead) {
                 $textTask = null;
@@ -160,27 +164,28 @@ class LeadController extends Controller
                     time() + 3600,
                     $textTask
                 );
+                $amo->addTag($hauptLeadId, 'Отправлен ИБ');
 
-                $amo->addTag($hauptLeadId, 'Отправлен в Ипотеку');
 
-                // Datenbankeintrag fürs Hauptlead
-                Lead::create(
-                    [
-                        'id_target_lead'  => $hauptLeadId,
-                        'related_lead'    => $newLead
-                    ]
-                );
-
-                // Datenbankeintrag für die Hypothek
-                Lead::create(
-                    [
-                        'id_target_lead'  => $newLead,
-                        'related_lead'    => $hauptLeadId
-                    ]
+                Lead::create([ /* Datenbankeintrag fürs Hauptlead */
+                    'id_target_lead'  => $hauptLeadId,
+                    'related_lead'    => $newLead,
+                ]);
+                Lead::create([ /* Datenbankeintrag für die Hypothek */
+                    'id_target_lead'  => $newLead,
+                    'related_lead'    => $hauptLeadId,
+                ]);
+            } else {
+                Log::info(
+                    __METHOD__,
+                    [json_encode($newLead)]
                 );
             }
 
-            return response(['OK. Active mortgage is not found. A new lead must be created'], 200);
+            return response(
+                ['OK. Active mortgage is not found. A new lead must be created'],
+                200
+            );
         }
     }
 
@@ -191,11 +196,7 @@ class LeadController extends Controller
 
         $leadId = $inputData['leads']['delete'][0]['id'];
 
-        Log::info(
-            __METHOD__,
-
-            [$leadId]
-        );
+        Log::info(__METHOD__, [$leadId]); // DEBUG
 
         return $lead->deleteWithRelated($leadId) ? response(['OK'], 200) : response(['ERROR'], 400);
     }
@@ -204,16 +205,9 @@ class LeadController extends Controller
     {
         $inputData = $request->all();
 
-        Log::info(__METHOD__, $inputData);
+        Log::info(__METHOD__, $inputData); // DEBUG
 
         $dataLead = $inputData['leads']['status'][0];
-
-        // changeStage::create(
-        //     [
-        //         'lead_id' => (int) $dataLead['id'],
-        //         'lead'    => json_encode($dataLead)
-        //     ]
-        // );
 
         changeStage::updateOrCreate(
             ['lead_id' => (int) $dataLead['id'],],
@@ -252,8 +246,7 @@ class LeadController extends Controller
         foreach ($leads as $lead) {
             $leadData = json_decode($lead->lead, true);
             $lead_id  = (int) $leadData['id'];
-
-            $ausDB = Lead::where('id_target_lead', $lead_id)->count();
+            $ausDB    = Lead::where('id_target_lead', $lead_id)->count();
 
             if ($ausDB) {
                 echo 'leadData aus der Datenbank<br>';
@@ -539,7 +532,6 @@ class LeadController extends Controller
                 }
             }
 
-            // Leadsdaten aus der Datenbank entfernen (change_stage)
             $objChangeStage->deleteLead($lead_id);
         }
     }
