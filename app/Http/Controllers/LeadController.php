@@ -63,7 +63,21 @@ class LeadController extends Controller
 
         $mainLeadRespMan = $amo->fetchUser($hauptLead['body']['responsible_user_id']);
 
-        Log::info(__METHOD__, [$mainLeadRespMan]); //DELETE
+        if (
+            $mainLeadRespMan['code'] === 404 ||
+            $mainLeadRespMan['code'] === 400
+        ) {
+            return response(
+                ['An error occurred in the server request while searching for a responsible user'],
+                $mainLeadRespMan['code']
+            );
+        } else if ($mainLeadRespMan['code'] === 204) {
+            return response(['Responsible user not found'], 404);
+        }
+
+        $mainLeadRespManName = $mainLeadRespMan['body']['name'];
+
+        Log::info(__METHOD__, [$mainLeadRespManName]); //DELETE
 
         // $mainContactId = null;
         // $contacts = $hauptLead['body']['_embedded']['contacts'];
