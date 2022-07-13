@@ -255,47 +255,17 @@ class amoCRM
         }
     }
 
-    // FIXME das ist ein schlechte Beispiel- Man muss es nie wieder machen.
     public function copyLead($id, $flag = false)
     {
-        //echo 'copyLead<br>';
         $lead = $this->findLeadById($id);
 
         $pipeline_id = (int) $lead['body']['pipeline_id'];
 
-        Log::info(
-            __METHOD__,
-
-            [
-                'message: copyLead << pipeline_id '  => ['pipeline_id' => $pipeline_id]
-            ]
-        );
-
-        // $pipelineGub        = 1393867;
-        // $pipelineGubPark    = 4551384;
-        // $pipelineDost       = 3302563;
-        // $pipelineDostPark   = 4703964;
+        Log::info(__METHOD__, [
+            'message: copyLead << pipeline_id '  => ['pipeline_id' => $pipeline_id]
+        ]);
 
         $responsible_user_id = (int) config('app.amoCRM.mortgage_responsible_user_id');
-
-        // switch ($pipeline_id) {
-        //     case $pipelineGub:
-        //     case $pipelineGubPark:
-        //         $responsible_user_id = 7507200;
-        //         break;
-
-        //     case $pipelineDost:
-        //     case $pipelineDostPark:
-        //         $responsible_user_id = 7896546;
-        //         break;
-
-        //     default:
-        //         $responsible_user_id = (int) config('app.amoCRM.mortgage_responsible_user_id');
-        //         break;
-        // }
-
-        //FIXME /////////////////////////////////////////////////////////
-
         $contacts = $lead['body']['_embedded']['contacts'];
         $newLeadContacts = [];
 
@@ -309,13 +279,8 @@ class amoCRM
             ];
         }
 
-        //FIXME /////////////////////////////////////////////////////////
-
-        //FIXME /////////////////////////////////////////////////////////
         $customFields = $lead['body']['custom_fields_values'];
         $newLeadCustomFields = $this->parseCustomFields($customFields);
-        //FIXME /////////////////////////////////////////////////////////
-
         $status_id = (int) config('app.amoCRM.mortgage_first_stage_id');
 
         if ($flag) {
@@ -324,7 +289,6 @@ class amoCRM
 
         try {
             $url = "https://" . config('app.amoCRM.subdomain') . ".amocrm.ru/api/v4/leads";
-
             $newLead = $this->client->sendRequest(
                 [
                     'url'     => $url,
@@ -352,23 +316,16 @@ class amoCRM
             }
 
             $newLeadId = $newLead['body']['_embedded']['leads'][0]['id'];
-
-            ////////////////////////////////////////////////////////////////////////////
-
             $url = "https://" . config('app.amoCRM.subdomain') . ".amocrm.ru/api/v4/leads/$newLeadId/link";
-
-            $response = $this->client->sendRequest(
-                [
-                    'url'            => $url,
-                    'headers' => [
-                        'Content-Type'  => 'application/json',
-                        'Authorization' => 'Bearer ' . $this->amoData['access_token']
-                    ],
-                    'method'  => 'POST',
-                    'data'    => $newLeadContacts
-
-                ]
-            );
+            $response = $this->client->sendRequest([
+                'url' => $url,
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'Authorization' => 'Bearer ' . $this->amoData['access_token']
+                ],
+                'method' => 'POST',
+                'data' => $newLeadContacts
+            ]);
 
             if ($response['code'] < 200 || $response['code'] > 204) {
                 throw new \Exception($response['code']);
@@ -376,13 +333,9 @@ class amoCRM
 
             return $newLeadId;
         } catch (\Exception $exception) {
-            Log::error(
-                __METHOD__,
-
-                [
-                    'message'  => $exception->getMessage()
-                ]
-            );
+            Log::error(__METHOD__, [
+                'message'  => $exception->getMessage()
+            ]);
 
             return false;
         }
@@ -498,17 +451,15 @@ class amoCRM
         $url = "https://" . config('app.amoCRM.subdomain') . ".amocrm.ru/api/v4/leads";
 
         try {
-            $response = $this->client->sendRequest(
-                [
-                    'url'     => $url,
-                    'headers' => [
-                        'Content-Type'  => 'application/json',
-                        'Authorization' => 'Bearer ' . $this->amoData['access_token']
-                    ],
-                    'method'  => 'PATCH',
-                    'data' => $data
-                ]
-            );
+            $response = $this->client->sendRequest([
+                'url' => $url,
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'Authorization' => 'Bearer ' . $this->amoData['access_token']
+                ],
+                'method' => 'PATCH',
+                'data' => $data
+            ]);
 
             if ($response['code'] < 200 || $response['code'] > 204) {
                 throw new \Exception($response['code']);
@@ -516,13 +467,9 @@ class amoCRM
 
             return $response;
         } catch (\Exception $exception) {
-            Log::error(
-                __METHOD__,
-
-                [
-                    'message'  => $exception->getMessage()
-                ]
-            );
+            Log::error(__METHOD__, [
+                'message'  => $exception->getMessage()
+            ]);
 
             return $response;
         }

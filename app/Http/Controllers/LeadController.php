@@ -44,8 +44,8 @@ class LeadController extends Controller
         $inputData   = $request->all();
         $hauptLeadId = $inputData['hauptLeadId'] ?? false;
         $from        = $inputData['from'] ?? false;
-
         $hauptLead = $amo->findLeadById($hauptLeadId);
+        $mainLeadRespManId = 1033945;
 
         if (
             $hauptLead['code'] === 404 ||
@@ -71,7 +71,10 @@ class LeadController extends Controller
 
         $contact = $amo->findContactById($mainContactId);
 
-        if ($contact['code'] === 404 || $contact['code'] === 400) {
+        if (
+            $contact['code'] === 404 ||
+            $contact['code'] === 400
+        ) {
             return response(
                 ['An error occurred in the server request while looking for a contact'],
                 $contact['code']
@@ -99,16 +102,11 @@ class LeadController extends Controller
             }
         }
 
-        if ($haveMortgage) {
-            // TODO eine Aufgabe für gefundenen Lead stellen
-
+        if ($haveMortgage) { /* eine Aufgabe für gefundenen Lead stellen */
             Log::info(
                 __METHOD__,
-
-                ['Active Hypothek ist gefunden. Eine Aufgabe muss gestellt werden']
-            );
-
-            //echo "mortgage id: $mortgageLeadId<br>";
+                ['Active Hypothek ist gefunden: ' . $mortgageLeadId . '. Eine Aufgabe muss gestellt werden']
+            ); //DEBUG //DELETE
 
             $amo->createTask(
                 (int) config('app.amoCRM.mortgage_responsible_user_id'),
@@ -117,14 +115,11 @@ class LeadController extends Controller
                 'Менеджер повторно отправил запрос на ипотеку.'
             );
 
-            // Datenbankeintrag fürs Hauptlead
-            Lead::create([
+            Lead::create([ /* Datenbankeintrag fürs Hauptlead */
                 'id_target_lead'  => $hauptLeadId,
                 'related_lead'    => $mortgageLeadId,
             ]);
-
-            // Datenbankeintrag für die Hypothek
-            Lead::create([
+            Lead::create([ /* Datenbankeintrag für die Hypothek */
                 'id_target_lead'  => $mortgageLeadId,
                 'related_lead'    => $hauptLeadId,
             ]);
@@ -142,30 +137,22 @@ class LeadController extends Controller
             $newLead = $amo->copyLead($hauptLeadId);
 
             if ($newLead) {
-                $textTask = null;
-
-                switch ($from) {
-                    case 'confirm':
-                        $textTask = 'Клиент выбрал квартиру. Хочет открыть ипотеку, свяжись с клиентом';
-                        break;
-
-                    case 'consult':
-                        $textTask = 'Клиент еще не определился с объектом недвижимости. Нужна консультация';
-                        break;
-
-                    default:
-                        $textTask = 'Менеджер отправил запрос на ипотеку.';
-                        break;
-                }
-
+                $amo->updateLead([[
+                    "id" => (int)$newLead,
+                    'custom_fields_values' => [[
+                        'field_id' => $mainLeadRespManId,
+                        'values' => [[
+                            'value' => "test name of manager"
+                        ]]
+                    ]]
+                ]]);
                 $amo->createTask(
                     (int) config('app.amoCRM.mortgage_responsible_user_id'),
                     $newLead,
                     time() + 3600,
-                    $textTask
+                    'Клиент выбрал квартиру. Хочет открыть ипотеку, свяжись с клиентом'
                 );
                 $amo->addTag($hauptLeadId, 'Отправлен ИБ');
-
 
                 Lead::create([ /* Datenbankeintrag fürs Hauptlead */
                     'id_target_lead'  => $hauptLeadId,
@@ -228,17 +215,19 @@ class LeadController extends Controller
         $objLead = new Lead();
 
         $leadsCount                 = 10;
-        $MORTGAGE_PIPELINE_ID       = 4691106;
-        $loss_reason_id             = 982017;
+        $MORTGAGE_PIPELINE_ID       = 5537869;
 
-        $loss_reason_close_by_man   = 1311718;
+
         $loss_reason_comment_id     = 755700;
+
         $mortgageApproved_status_id = 43332213;
 
-        $paymentForm_field_id       = 589157;
-        $paymentForm_field_mortgage = 1262797;
+        $paymentForm_field_id       = 982273;
+        $paymentForm_field_mortgage = 1525765;
 
         $haupt_loss_reason_id       = 981809;
+        $loss_reason_id             = 982017;
+        $loss_reason_close_by_man   = 1311718;
 
         $leads          = changeStage::take($leadsCount)->get();
         $objChangeStage = new changeStage();
@@ -259,10 +248,7 @@ class LeadController extends Controller
                 $status_id                = (int) $leadData['status_id'];
                 $stage_loss               = 143;
                 $stage_success            = 142;
-                $stage_booking_gub        = 22041337;
-                $stage_booking_gub_park   = 41986941;
-                $stage_booking_dost       = 33256063;
-                $stage_booking_dost_park  = 43058475;
+                $stage_booking            = 48941119;
 
                 // Mortgage-Stufen
                 $FILING_AN_APPLICATION      = 43332207;
@@ -376,15 +362,7 @@ class LeadController extends Controller
                     echo $lead_id . ' Es ist nicht Hypothek-Pipeline<br>';
                     Log::info(__METHOD__, [$lead_id . ' Es ist nicht Hypothek-Pipeline']);
 
-                    if ( // TODO booking stage
-                        $status_id === $stage_booking_gub
-                        ||
-                        $status_id === $stage_booking_gub_park
-                        ||
-                        $status_id === $stage_booking_dost
-                        ||
-                        $status_id === $stage_booking_dost_park
-                    ) {
+                    if ($status_id === $stage_booking) { /* booking stage */
                         echo $lead_id . ' Es ist booking stage<br>';
 
                         $custom_fields      = $leadData['custom_fields'];
@@ -466,18 +444,15 @@ class LeadController extends Controller
                         } else {
                             echo 'Dieses Lead ist nicht target<br>';
                         }
-                    } else if ($status_id === $stage_loss) // TODO Pipeline-Lead ist geschlossen
-                    {
-                        echo $lead_id . ' Pipeline-Lead ist geschlossen<br>';
-                        Log::info(__METHOD__, [$lead_id . ' Pipeline-Lead ist geschlossen']);
+                    } else if ($status_id === $stage_loss) { /* Pipeline-Lead ist geschlossen. Hypotheklead muss zum Ende gebracht werden. */
+                        Log::info(
+                            __METHOD__,
+                            [$lead_id . ' Pipeline-Lead ist geschlossen']
+                        ); // DEBUG
 
-                        $crtLead = Lead::where('id_target_lead', $lead_id)->first();
-
-                        echo $crtLead->related_lead . ' Dieses Hypothek-Lead muss auch geschlossen werden<br>';
-
-                        // Hypotheklead zum Ende bringen
-                        $custom_fields    = $leadData['custom_fields'];
-                        $crt_loss_reason  = false;
+                        $crtLead         = Lead::where('id_target_lead', $lead_id)->first();
+                        $custom_fields   = $leadData['custom_fields'];
+                        $crt_loss_reason = false;
 
                         for ($cfIndex = 0; $cfIndex < count($custom_fields); $cfIndex++) {
                             if ((int) $custom_fields[$cfIndex]['id'] === $haupt_loss_reason_id) {
@@ -485,38 +460,29 @@ class LeadController extends Controller
                             }
                         }
 
-                        echo 'crt_loss_reason<br>';
-                        echo '<pre>';
-                        print_r($crt_loss_reason);
-                        echo '</pre>';
+                        Log::info(
+                            __METHOD__,
+                            ['Verlust Grund des Pipeline-Leads ist: ' . $crt_loss_reason]
+                        ); // DEBUG
 
-                        $amo->updateLead(
-                            [
+                        $amo->updateLead([[
+                            "id" => (int) $crtLead->related_lead,
+                            "status_id" => $stage_loss,
+                            'custom_fields_values' => [
                                 [
-                                    "id"                    => (int) $crtLead->related_lead,
-                                    "status_id"             => $stage_loss,
-                                    'custom_fields_values'  => [
-                                        [
-                                            'field_id'  => $loss_reason_id,
-                                            'values'    => [
-                                                [
-                                                    'enum_id' => $loss_reason_close_by_man
-                                                ]
-                                            ]
-                                        ],
-
-                                        [
-                                            'field_id' => $loss_reason_comment_id,
-                                            'values' => [
-                                                [
-                                                    'value' => $crt_loss_reason['values'][0]['value']
-                                                ]
-                                            ]
-                                        ]
-                                    ]
+                                    'field_id' => $loss_reason_id,
+                                    'values' => [[
+                                        'enum_id' => $loss_reason_close_by_man
+                                    ]]
+                                ],
+                                [
+                                    'field_id' => $loss_reason_comment_id,
+                                    'values' => [[
+                                        'value' => $crt_loss_reason['values'][0]['value']
+                                    ]]
                                 ]
                             ]
-                        );
+                        ]]);
 
                         // Aufgabe in der Hypotheklead stellen
                         $amo->createTask(
