@@ -61,6 +61,10 @@ class LeadController extends Controller
 
         Log::info(__METHOD__, [$hauptLead['body']['responsible_user_id']]); //DELETE
 
+        $mainLeadRespMan = $amo->fetchUser($hauptLead['body']['responsible_user_id']);
+
+        Log::info(__METHOD__, [$mainLeadRespMan]); //DELETE
+
         // $mainContactId = null;
         // $contacts = $hauptLead['body']['_embedded']['contacts'];
 

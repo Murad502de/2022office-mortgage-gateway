@@ -502,4 +502,34 @@ class amoCRM
             ]
         );
     }
+
+    public function fetchUser($id = null)
+    {
+        if (!$id) return false;
+
+        $url = "https://" . config('app.amoCRM.subdomain') . ".amocrm.ru/api/v4/users/$id";
+
+        try {
+            $response = $this->client->sendRequest([
+                'url' => $url,
+                'method' => 'GET',
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'Authorization' => 'Bearer ' . $this->amoData['access_token']
+                ],
+            ]);
+
+            if ($response['code'] < 200 || $response['code'] > 204) {
+                throw new \Exception($response['code']);
+            }
+
+            return $response;
+        } catch (\Exception $exception) {
+            Log::error(__METHOD__, [
+                'message' => $exception->getMessage()
+            ]);
+
+            return $response;
+        }
+    }
 }
