@@ -79,120 +79,120 @@ class LeadController extends Controller
 
         Log::info(__METHOD__, [$mainLeadRespManName]); //DELETE
 
-        // $mainContactId = null;
-        // $contacts = $hauptLead['body']['_embedded']['contacts'];
+        $mainContactId = null;
+        $contacts = $hauptLead['body']['_embedded']['contacts'];
 
-        // for ($contactIndex = 0; $contactIndex < count($contacts); $contactIndex++) {
-        //     if ($contacts[$contactIndex]['is_main']) {
-        //         $mainContactId = (int) $contacts[$contactIndex]['id'];
-        //         break;
-        //     }
-        // }
+        for ($contactIndex = 0; $contactIndex < count($contacts); $contactIndex++) {
+            if ($contacts[$contactIndex]['is_main']) {
+                $mainContactId = (int) $contacts[$contactIndex]['id'];
+                break;
+            }
+        }
 
-        // $contact = $amo->findContactById($mainContactId);
+        $contact = $amo->findContactById($mainContactId);
 
-        // if (
-        //     $contact['code'] === 404 ||
-        //     $contact['code'] === 400
-        // ) {
-        //     return response(
-        //         ['An error occurred in the server request while looking for a contact'],
-        //         $contact['code']
-        //     );
-        // } else if ($contact['code'] === 204) {
-        //     return response(['Contact not found'], 404);
-        // }
+        if (
+            $contact['code'] === 404 ||
+            $contact['code'] === 400
+        ) {
+            return response(
+                ['An error occurred in the server request while looking for a contact'],
+                $contact['code']
+            );
+        } else if ($contact['code'] === 204) {
+            return response(['Contact not found'], 404);
+        }
 
-        // $leads                = $contact['body']['_embedded']['leads'];
-        // $mortgage_pipeline_id = (int) config('app.amoCRM.mortgage_pipeline_id');
-        // $haveMortgage         = false;
-        // $mortgageLeadId       = false;
+        $leads                = $contact['body']['_embedded']['leads'];
+        $mortgage_pipeline_id = (int) config('app.amoCRM.mortgage_pipeline_id');
+        $haveMortgage         = false;
+        $mortgageLeadId       = false;
 
-        // for ($leadIndex = 0; $leadIndex < count($leads); $leadIndex++) {
-        //     $lead = $amo->findLeadById($leads[$leadIndex]['id']);
-        //     $currentPipelineid = $lead['body']['pipeline_id'];
+        for ($leadIndex = 0; $leadIndex < count($leads); $leadIndex++) {
+            $lead = $amo->findLeadById($leads[$leadIndex]['id']);
+            $currentPipelineid = $lead['body']['pipeline_id'];
 
-        //     if (
-        //         (int) $mortgage_pipeline_id === (int) $currentPipelineid &&
-        //         (int) $lead['body']['status_id'] !== 142 &&
-        //         (int) $lead['body']['status_id'] !== 143
-        //     ) {
-        //         $haveMortgage   = true;
-        //         $mortgageLeadId = $lead['body']['id'];
-        //     }
-        // }
+            if (
+                (int) $mortgage_pipeline_id === (int) $currentPipelineid &&
+                (int) $lead['body']['status_id'] !== 142 &&
+                (int) $lead['body']['status_id'] !== 143
+            ) {
+                $haveMortgage   = true;
+                $mortgageLeadId = $lead['body']['id'];
+            }
+        }
 
-        // if ($haveMortgage) { /* eine Aufgabe für gefundenen Lead stellen */
-        //     Log::info(
-        //         __METHOD__,
-        //         ['Active Hypothek ist gefunden: ' . $mortgageLeadId . '. Eine Aufgabe muss gestellt werden']
-        //     ); //DEBUG //DELETE
+        if ($haveMortgage) { /* eine Aufgabe für gefundenen Lead stellen */
+            Log::info(
+                __METHOD__,
+                ['Active Hypothek ist gefunden: ' . $mortgageLeadId . '. Eine Aufgabe muss gestellt werden']
+            ); //DEBUG //DELETE
 
-        //     $amo->createTask(
-        //         (int) config('app.amoCRM.mortgage_responsible_user_id'),
-        //         $mortgageLeadId,
-        //         time() + 10800,
-        //         'Менеджер повторно отправил запрос на ипотеку.'
-        //     );
+            $amo->createTask(
+                (int) config('app.amoCRM.mortgage_responsible_user_id'),
+                $mortgageLeadId,
+                time() + 10800,
+                'Менеджер повторно отправил запрос на ипотеку.'
+            );
 
-        //     Lead::create([ /* Datenbankeintrag fürs Hauptlead */
-        //         'id_target_lead'  => $hauptLeadId,
-        //         'related_lead'    => $mortgageLeadId,
-        //     ]);
-        //     Lead::create([ /* Datenbankeintrag für die Hypothek */
-        //         'id_target_lead'  => $mortgageLeadId,
-        //         'related_lead'    => $hauptLeadId,
-        //     ]);
+            Lead::create([ /* Datenbankeintrag fürs Hauptlead */
+                'id_target_lead'  => $hauptLeadId,
+                'related_lead'    => $mortgageLeadId,
+            ]);
+            Lead::create([ /* Datenbankeintrag für die Hypothek */
+                'id_target_lead'  => $mortgageLeadId,
+                'related_lead'    => $hauptLeadId,
+            ]);
 
-        //     return response(
-        //         ['OK. Active mortgage is found. A task must be set'],
-        //         200
-        //     );
-        // } else { /* Lead erstellen und zwar das Hauptlead kopieren */
-        //     Log::info(__METHOD__, [
-        //         'OK. Active mortgage is not found. A new lead must be created'
-        //     ]);
+            return response(
+                ['OK. Active mortgage is found. A task must be set'],
+                200
+            );
+        } else { /* Lead erstellen und zwar das Hauptlead kopieren */
+            Log::info(__METHOD__, [
+                'OK. Active mortgage is not found. A new lead must be created'
+            ]);
 
-        //     $newLead = $amo->copyLead($hauptLeadId);
+            $newLead = $amo->copyLead($hauptLeadId);
 
-        //     if ($newLead) {
-        //         $amo->updateLead([[
-        //             "id" => (int)$newLead,
-        //             'custom_fields_values' => [[
-        //                 'field_id' => $mainLeadRespManId,
-        //                 'values' => [[
-        //                     'value' => "test name of manager"
-        //                 ]]
-        //             ]]
-        //         ]]);
-        //         $amo->createTask(
-        //             (int) config('app.amoCRM.mortgage_responsible_user_id'),
-        //             $newLead,
-        //             time() + 3600,
-        //             'Клиент выбрал квартиру. Хочет открыть ипотеку, свяжись с клиентом'
-        //         );
-        //         $amo->addTag($hauptLeadId, 'Отправлен ИБ');
+            if ($newLead) {
+                $amo->updateLead([[
+                    "id" => (int)$newLead,
+                    'custom_fields_values' => [[
+                        'field_id' => $mainLeadRespManId,
+                        'values' => [[
+                            'value' => $mainLeadRespManName
+                        ]]
+                    ]]
+                ]]);
+                $amo->createTask(
+                    (int) config('app.amoCRM.mortgage_responsible_user_id'),
+                    $newLead,
+                    time() + 3600,
+                    'Клиент выбрал квартиру. Хочет открыть ипотеку, свяжись с клиентом'
+                );
+                $amo->addTag($hauptLeadId, 'Отправлен ИБ');
 
-        //         Lead::create([ /* Datenbankeintrag fürs Hauptlead */
-        //             'id_target_lead'  => $hauptLeadId,
-        //             'related_lead'    => $newLead,
-        //         ]);
-        //         Lead::create([ /* Datenbankeintrag für die Hypothek */
-        //             'id_target_lead'  => $newLead,
-        //             'related_lead'    => $hauptLeadId,
-        //         ]);
-        //     } else {
-        //         Log::info(
-        //             __METHOD__,
-        //             [json_encode($newLead)]
-        //         );
-        //     }
+                Lead::create([ /* Datenbankeintrag fürs Hauptlead */
+                    'id_target_lead'  => $hauptLeadId,
+                    'related_lead'    => $newLead,
+                ]);
+                Lead::create([ /* Datenbankeintrag für die Hypothek */
+                    'id_target_lead'  => $newLead,
+                    'related_lead'    => $hauptLeadId,
+                ]);
+            } else {
+                Log::info(
+                    __METHOD__,
+                    [json_encode($newLead)]
+                );
+            }
 
-        //     return response(
-        //         ['OK. Active mortgage is not found. A new lead must be created'],
-        //         200
-        //     );
-        // }
+            return response(
+                ['OK. Active mortgage is not found. A new lead must be created'],
+                200
+            );
+        }
     }
 
     public function deleteLeadWithRelated(Request $request)
