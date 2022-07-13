@@ -59,7 +59,7 @@ class LeadController extends Controller
             return response(['Lead not found'], 404);
         }
 
-        Log::info(__METHOD__, [$hauptLead]); //DELETE
+        Log::info(__METHOD__, [$hauptLead['body']['responsible_user_id']]); //DELETE
 
         // $mainContactId = null;
         // $contacts = $hauptLead['body']['_embedded']['contacts'];
