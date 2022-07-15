@@ -378,6 +378,11 @@ class LeadController extends Controller
                         $custom_fields      = $leadData['custom_fields'];
                         $crtPaymentMortgage = false;
 
+                        echo 'custom_fields:<br>'; //DELETE
+                        echo '<pre>';
+                        print_r($custom_fields);
+                        echo '</pre>'; //DELETE
+
                         for ($cfIndex = 0; $cfIndex < count($custom_fields); $cfIndex++) {
                             if ((int) $custom_fields[$cfIndex]['id'] === $paymentForm_field_id) {
                                 $crtPaymentMortgage = $custom_fields[$cfIndex]['values']['enum'];
@@ -492,8 +497,6 @@ class LeadController extends Controller
 
                         // Leadsdaten aus der Datenbank entfernen (leads)
                         // $objLead->deleteWithRelated((int) $lead_id);
-
-                        return response(['OK'], 200);
                     }
                 }
             }
