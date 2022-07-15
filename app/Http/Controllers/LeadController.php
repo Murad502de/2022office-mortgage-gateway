@@ -280,7 +280,7 @@ class LeadController extends Controller
                 $SUBMITTED_FOR_REGISTRATION = 43332234;
                 $CONTROL_RECEIPT_FUNDS      = 43332240;
 
-                if ($pipeline_id === $MORTGAGE_PIPELINE_ID) {
+                if ($pipeline_id === $MORTGAGE_PIPELINE_ID) { /* Das ist Hypothek-Pipeline */
                     echo $lead_id . ' Es ist Hypothek-Pipeline<br>';
                     Log::info(__METHOD__, [$lead_id . ' Es ist Hypothek-Pipeline']);
 
@@ -377,9 +377,8 @@ class LeadController extends Controller
                             );
                         }
                     }
-                } else {
-                    echo $lead_id . ' Es ist nicht Hypothek-Pipeline<br>';
-                    Log::info(__METHOD__, [$lead_id . ' Es ist nicht Hypothek-Pipeline']);
+                } else { /* Das ist kein Hypothek-Pipeline */
+                    Log::info(__METHOD__, [$lead_id . ' Es ist nicht Hypothek-Pipeline']); //DELETE
 
                     if ($status_id === $stage_booking) { /* booking stage */
                         echo $lead_id . ' Es ist booking stage<br>';
@@ -508,11 +507,13 @@ class LeadController extends Controller
                             $responsible_user_id,
                             (int) $crtLead->related_lead,
                             time() + 10800,
-                            'Сделка менеджера с клиентом в основной воронке перешла в "Закрыто не реализовано". Созвонись с клиентом. Если покупка не актуальна, то закрой все активные задачи. Если покупка актуальна, то свяжись с менеджером и выясни детали, а затем восстанови сделку.'
+                            'Менеджер закрыл сделку с клиентом'
                         );
 
                         // Leadsdaten aus der Datenbank entfernen (leads)
-                        $objLead->deleteWithRelated((int) $lead_id);
+                        // $objLead->deleteWithRelated((int) $lead_id);
+
+                        return response(['OK'], 200);
                     }
                 }
             }
