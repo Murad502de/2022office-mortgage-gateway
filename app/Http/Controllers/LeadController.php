@@ -385,7 +385,7 @@ class LeadController extends Controller
 
                         for ($cfIndex = 0; $cfIndex < count($custom_fields); $cfIndex++) {
                             if ((int) $custom_fields[$cfIndex]['id'] === $paymentForm_field_id) {
-                                $crtPaymentMortgage = $custom_fields[$cfIndex]['values']['enum'];
+                                $crtPaymentMortgage = $custom_fields[$cfIndex]['values'][0]['enum'];
 
                                 break;
                             }
@@ -501,7 +501,7 @@ class LeadController extends Controller
                 }
             }
 
-            $objChangeStage->deleteLead($lead_id);
+            // $objChangeStage->deleteLead($lead_id);
         }
     }
 }
