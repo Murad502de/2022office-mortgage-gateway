@@ -225,8 +225,6 @@ class LeadController extends Controller
 
     public function cronChangeStage()
     {
-        return 200; // DELETE
-
         $account  = new Account();
         $authData = $account->getAuthData();
         $amo      = new amoCRM($authData);
