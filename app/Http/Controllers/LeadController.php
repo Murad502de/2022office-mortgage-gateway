@@ -255,10 +255,8 @@ class LeadController extends Controller
             $ausDB    = Lead::where('id_target_lead', $lead_id)->count();
 
             if ($ausDB) {
-                echo 'leadData aus der Datenbank<br>';
-                echo '<pre>';
-                print_r($leadData);
-                echo '</pre>';
+                echo 'leadData aus der Datenbank<br>'; //DELETE
+                echo '<pre>';print_r($leadData);echo '</pre>'; //DELETE
 
                 $responsible_user_id      = (int) $leadData['responsible_user_id'];
                 $pipeline_id              = (int) $leadData['pipeline_id'];
@@ -478,7 +476,7 @@ class LeadController extends Controller
 
                         Log::info(
                             __METHOD__,
-                            ['Verlust Grund des Pipeline-Leads ist: ' . $crt_loss_reason]
+                            ['Verlust Grund des Pipeline-Leads ist: ' . json_encode($crt_loss_reason)]
                         ); // DEBUG
 
                         $amo->updateLead([[
