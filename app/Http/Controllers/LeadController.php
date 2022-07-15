@@ -273,13 +273,14 @@ class LeadController extends Controller
                 $OBJECT_SELECTION           = 48941221;
 
                 if ($pipeline_id === $MORTGAGE_PIPELINE_ID) { /* Das ist Hypothek-Pipeline */
-                    echo $lead_id . ' Es ist Hypothek-Pipeline<br>';
-                    Log::info(__METHOD__, [$lead_id . ' Es ist Hypothek-Pipeline']);
+                    echo $lead_id . ' Es ist Hypothek-Pipeline<br>'; //DELETE
 
-                    if ($status_id === $mortgageApproved_status_id) // TODO Hypothek wurde genehmigt
-                    {
-                        echo $lead_id . ' Hypothek genehmigt<br>';
-                        Log::info(__METHOD__, [$lead_id . ' Hypothek genehmigt']);
+                    Log::info(__METHOD__, [$lead_id . ' Es ist Hypothek-Pipeline']); //DELETE
+
+                    if ($status_id === $OBJECT_SELECTION) { // TODO Hypothek wurde genehmigt
+                        echo $lead_id . ' Hypothek genehmigt<br>'; //DELETE
+
+                        Log::info(__METHOD__, [$lead_id . ' Hypothek genehmigt']); //DELETE
 
                         $crtLead      = Lead::where('id_target_lead', $lead_id)->first();
                         $hauptLeadId  = (int) $crtLead->related_lead;
@@ -309,8 +310,7 @@ class LeadController extends Controller
                             time() + 10800,
                             'Клиенту одобрена ипотека'
                         );
-                    } else if ($status_id === $stage_loss) // TODO Hypothek-Lead ist geschlossen
-                    {
+                    } else if ($status_id === $stage_loss) { // TODO Hypothek-Lead ist geschlossen
                         echo $lead_id . ' Hypothek-Lead ist geschlossen<br>';
                         Log::info(__METHOD__, [$lead_id . ' Hypothek-Lead ist geschlossen']);
 
