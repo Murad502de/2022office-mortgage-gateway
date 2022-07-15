@@ -500,7 +500,7 @@ class LeadController extends Controller
                 }
             }
 
-            // $objChangeStage->deleteLead($lead_id);
+            $objChangeStage->deleteLead($lead_id);
         }
     }
 }
