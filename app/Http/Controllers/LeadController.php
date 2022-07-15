@@ -340,8 +340,7 @@ class LeadController extends Controller
                         echo '</pre>';
 
                         if (
-                            $hauptLead_status_id !== $stage_loss
-                            &&
+                            $hauptLead_status_id !== $stage_loss &&
                             $hauptLead_status_id !== $stage_success
                         ) {
                             // Aufgabe in der Hauptlead stellen
