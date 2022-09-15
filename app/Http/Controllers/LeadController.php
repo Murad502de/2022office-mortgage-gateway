@@ -488,7 +488,8 @@ class LeadController extends Controller
 
                         // Aufgabe in der Hypotheklead stellen
                         $amo->createTask(
-                            $responsible_user_id,
+                            // $responsible_user_id,
+                            8341711, // Wachtina Julia
                             (int) $crtLead->related_lead,
                             time() + 10800,
                             'Менеджер закрыл сделку с клиентом'
