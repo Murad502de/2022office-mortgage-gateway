@@ -169,7 +169,8 @@ class LeadController extends Controller
                     (int) config('app.amoCRM.mortgage_responsible_user_id'),
                     $newLead,
                     time() + 3600,
-                    'Клиент выбрал квартиру. Хочет открыть ипотеку, свяжись с клиентом'
+                    'Необходима консультация. Свяжитесь с клиентом'
+                    // 'Клиент выбрал квартиру. Хочет открыть ипотеку, свяжись с клиентом'
                 );
                 $amo->addTag($hauptLeadId, 'Отправлен ИБ');
 
